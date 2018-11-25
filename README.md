@@ -22,6 +22,7 @@ http://www.numpy.org/
 运行
 
 使用cmd进入该文件夹后运行一下命令
+
 '''
 python get_homology.py -0.5
 '''
@@ -30,7 +31,8 @@ python get_homology.py -0.5
 
 # 结果
 脚本运行结束后会生成一个相同名称的“.fas”文件
----------------------------------------------------------
+
+
 # Script summary
 This simple script is used to remove suspected non-homologous sites that appear after alignment.
 
@@ -57,9 +59,11 @@ Prepare the input files:
 Run the script:
 
 Use cmd to enter the folder and run the command
+
 '''
 python get_homology.py -0.5
 '''
+
 0.5 indicates that if the vacancy in a site reaches 50%, the column will be deleted. The value ranges from 0 to 1.
 
 # Result
