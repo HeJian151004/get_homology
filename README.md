@@ -40,9 +40,9 @@ The script only deletes the sites with a certain proportion of vacancies.
 
 
 # Installation
-1. The script needs to run on the Windows platform
+1.The script needs to run on the Windows platform
 
-2. Python3 environments are required for scripts
+2.Python3 environments are required for scripts
 https://www.python.org/downloads/
 
 3.python3-numpy module are required for scripts
