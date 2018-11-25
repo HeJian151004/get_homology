@@ -23,7 +23,7 @@ http://www.numpy.org/
 
 使用cmd进入该文件夹后运行一下命令
 
-'''CMD
+'''
 python get_homology.py -0.5
 '''
 
@@ -60,7 +60,7 @@ Run the script:
 
 Use cmd to enter the folder and run the command
 
-'''CMD
+'''
 python get_homology.py -0.5
 '''
 
