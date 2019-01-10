@@ -4,12 +4,12 @@
 该脚本无法严格意义上的删除非同源位点，脚本仅将空缺数目达到一定比例的位点删掉。
 
 # 安装
-1.脚本需运行于windows平台
+1.脚本需运行于Windows平台
 
-2.脚本需要python3环境
+2.脚本需要Python3环境
 https://www.python.org/downloads/
 
-3.脚本需要安装numpy模块
+3.脚本需要安装Numpy模块
 http://www.numpy.org/
 
 # 使用说明
@@ -47,7 +47,7 @@ The script only deletes the sites with a certain proportion of vacancies.
 2.Python3 environments are required for scripts
 https://www.python.org/downloads/
 
-3.python3-numpy module are required for scripts
+3.Python3-Numpy module are required for scripts
 http://www.numpy.org/
 
 # Manual
