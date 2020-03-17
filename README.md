@@ -1,38 +1,3 @@
-# 脚本简介
-该简易脚本用于删除排序之后出现的疑似非同源位点。
-
-该脚本无法严格意义上的删除非同源位点，脚本仅将空缺数目达到一定比例的位点删掉。
-
-# 安装
-1.脚本需运行于Windows平台
-
-2.脚本需要Python3环境
-https://www.python.org/downloads/
-
-3.脚本需要安装Numpy模块
-http://www.numpy.org/
-
-# 使用说明
-准备文件：
-
-1.将排序完成的序列导出为fasta文件(后缀必须为.fasta),导出文件时单个序列需在一行中，不要使用Wrap sequence every 80 chars类似的选项导出
-
-2.将fasta文件复制如脚本所在的文件夹中
-
-运行
-
-使用cmd进入该文件夹后运行一下命令
-
-'''
-python get_homology.py -0.5
-'''
-
-其中0.5表示，如果一个位点内的空缺达到50%即将此列删掉。该值得取值范围在0~1之间。
-
-# 结果
-脚本运行结束后会生成一个相同名称的“.fas”文件
-
-
 # Script summary
 This simple script is used to remove suspected non-homologous sites that appear after alignment.
 
@@ -40,47 +5,75 @@ The script cannot delete the strictly speaking non-homologous sites.
 
 The script only deletes the sites with a certain proportion of vacancies.
 
+Scripts can work with multiple files in parallel.
+
 
 # Installation
-1.The script needs to run on the Windows platform
+1.The script needs to run on the Linux platform
 
 2.Python3 environments are required for scripts
-https://www.python.org/downloads/
 
-3.Python3-Numpy module are required for scripts
-http://www.numpy.org/
+3.Module of Numpy, Pandas and Biopython are required for scripts
+
 
 # Manual
-Prepare the input files:
+1. Modify the number in line 77 of the script, and delete each locus when the gap ratio in each locus exceeds that ratio.
 
-1.export the alignment sequence as a fasta file(the file suffix must be .fasta). When exporting a file,a single sequence need to be in one line. Do not export files with option like "Wrap sequence every 80 chars".
+2. Modify the number at line 124 of the script, which indicates the maximum number of processes used to run the script.
 
-2.copy all fasta files to the folder where the script resides.
-Run the script:
+3. Put the alignment file in fasta format to be analyzed in a folder with the script.
 
-Use cmd to enter the folder and run the command
 
+# run
 '''
-python get_homology.py -0.5
+python get_homology.py
 '''
 
-0.5 indicates that if the vacancy in a site reaches 50%, the column will be deleted. The value ranges from 0 to 1.
 
 # Result
 
-At the end of script, a ".fas" file with the same name is generated.
+When the script finishes running, a ".fas" file with the same name is generated.
+
+----------
 
 
 
+# 脚本简介
+该简易脚本用于删除排序之后出现的疑似非同源位点。
+
+该脚本无法严格意义上的删除非同源位点，脚本仅将空缺数目达到一定比例的位点删掉。
+
+脚本可以并行处理多个文件。
+
+# 安装
+1.脚本需运行于Linux平台
+
+2.脚本需要Python3环境
+
+3.脚本需要安装Numpy、pandas、biopython模块
+
+
+# 使用说明
+1. 修改脚本第77行数字，当每个位点中的gap所占比例超过该比例则将该位点删除。
+
+2. 修改脚本第124行数字，该数字表示最多使用多少个进程运行该脚本。
+
+3. 将需要进行分析的fasta格式的alignment文件与该脚本放入一个文件夹中。
 
 
 
+# 运行
+'''
+python get_homology.py
+'''
 
 
+# 结果
+脚本运行结束后会生成一个相同名称的“.fas”文件
+
+-------
 
 
-作者：何健
-联系方式：J.he930724@gmail.com
 
 Author: Jian He
 Email: J.he930724@gmail.com
