@@ -1,166 +1,159 @@
-"""
-@author: hejian
-Email: j.he930724@gamail.com
-"""
-
-import sys
-import os           #导入os模块
 import numpy as np
+from pandas.core.frame import DataFrame
+from multiprocessing import Pool
+import os, time, random
+from Bio import SeqIO
 
-'''
-#函数 get_file_list()，得到当前目录中所有的文件名并存入相关列表中
-#function "get_file_list()", gets all the file names in the current directory and
-stores them in the list "file_name"
-'''
+
 def get_file_list():
-  global now_dir
-  now_dir = os.getcwd()           #得到当前目录   
-  file_temp = os.listdir(path=now_dir)    #得到当前目录中的所有文件名
-  global file_name
-  file_name = []         #储存基因文件名称
-  for each in file_temp:        #将后缀为.fasta的文件加入列表file_name中
-      if ".fasta" in each:
-          file_name.append(each)
-  
-
-'''
-#函数get_row_column()，得到矩阵的行数还有列数
-#function "get_row_column()", get the number of rows and the number of columns
-'''
-def get_row_column():
-  temp_list = []
-  fasta_file = open(now_dir + "\\" + fasta_name, "r")
-  judge = True
-  for each_line in fasta_file:
-    if each_line[0] == ">":
-      temp_list.append(">")
-    elif judge == True:
-      global column
-      column = len(each_line[0:-1])
-      judge = False
-    else:
-      pass
-  global row
-  row = len(temp_list)
-  fasta_file.close()
+    '''
+    函数get_file_list: 获取当前文件夹中符合目标扩展名的文件
+    输入: 无，将本脚本放置在目标文件夹中即可
+    输出: file_name：所有文件的名称列表
+    '''          
+    file_name = []       
+    for each in os.listdir(os.getcwd()):        
+        if ".fasta" in each:
+            file_name.append(each)
+    return file_name
 
 
-'''
-#函数get_matrix(),建立一个只含有序列信息的文本文档
-#function "get_matrix()", Create a text document that contains only sequence information
-'''
-def get_matrix():
-  matrix_file = open(now_dir + "\\" + fasta_name[0:-6] + ".txt", "a")
-  fasta_file = open(now_dir + "\\" + fasta_name, "r")
-  for each_line in fasta_file:              #将所有的碱基对以数字的形式存入列表中
-    if each_line[0] != ">":
-      code_line = each_line
-      intab = "ATCG-QWERYUIOPSDFHJKLZXVBNM?"
-      outtab = "1234000000000000000000000000"
-      trantab = str.maketrans(intab,outtab)         #建立字符映射表
-      new_line = code_line.translate(trantab)            #经过映射的字符串赋值给变量new_line
-      for each in new_line:                         #每行中的字符后面加一个空格
-          if each != "\n":
-              matrix_file.write(each + " ")
-          else:
-              matrix_file.write(each)
-  matrix_file.close()
-  fasta_file.close()
+def if80to1(fasta_name):
+    '''
+    函数if80to1: 如果序列是80列换行的话则修改成不换行
+    输入：待处理的fasta文件名称
+    输出：如果原始fasta中的序列是80行换行的则将所有序列集中至一行。并写出一个新的后缀为fa格式的文件
+    '''
+    tmp_len_list = []
+    for each_record in SeqIO.parse(fasta_name, "fasta"):
+        tmp_len_list.append(len(str(each_record.seq)))
+    tmp_len_list.sort()
+    with open(fasta_name[:-3], "a") as write_file:
+        for each_record in SeqIO.parse(fasta_name, "fasta"):
+            if len(str(each_record.seq)) != tmp_len_list[-1]:
+                each_record.seq = each_record.seq + "-"*(tmp_len_list[-1] - len(str(each_record.seq)))
+                write_file.write(">" + str(each_record.id) + "\n")
+                write_file.write(str(each_record.seq) + "\n")    
+            else:
+                write_file.write(">" + str(each_record.id) + "\n")
+                write_file.write(str(each_record.seq) + "\n")                            
+             
+
+def get_seq_name_list(fasta_name):
+    '''
+    函数get_seq_name_list: 获得alignment文件中各个序列的序列名称
+    输入：待处理的fasta文件名称
+    输出：seq_name_list包含有所有序列名称的一个列表文件
+    '''   
+    seq_name_list = []
+    with open(fasta_name[:-3]) as read_file:
+        for each_line in read_file:
+            if each_line[0] == ">":
+                seq_name_list.append(each_line)
+    return seq_name_list
 
 
+def calculate(fasta_name):
+    '''
+    函数calculate: 计算alignment文件各位点上gap所占的比例，如果大于设定好的阈值，则删除该位点
+    输入：待处理的fasta文件名称
+    输出：result_list: 包含所有被删除过gap的序列的列表
+    '''      
+    seq_array_temp_list = []
+    with open(fasta_name[:-3]) as read_file:
+        for each_line in read_file:
+            if each_line[0] != ">":
+                if each_line[-1] == "\n":
+                    seq_array_temp_list.append(list(each_line[:-1]))
+                else:
+                    seq_array_temp_list.append(list(each_line))
+    seq_array = DataFrame(seq_array_temp_list)
+    row = seq_array.shape[0]
+    column = seq_array.shape[1]
+    temp_list = []
+    for each_num in range(0,column):
+        gap_num = list(seq_array[each_num]).count("-") + list(seq_array[each_num]).count("?")
+        if gap_num/row >= 0.001:            #gap占比阈值，如果某个位点中gap所占的比例大于该阈值，则删除该位点
+            pass
+        else:
+            temp_list.append(list(seq_array[each_num]))
+    
+    temp_seq_array = DataFrame(temp_list)
+    result_list = []
+    for each_num in range(0,row):
+        try:
+            result_list.append("".join(list(temp_seq_array[each_num].values)))
+        except:
+            result_list = []
+    return(result_list)
 
-'''
-#函数get_temp_matrix()，根据上一个函数生成的文本文档，建立一个numpy矩阵
-#function "get_temp_matrix()", Create a numpy matrix based on the text document 
-generated from the previous function
-'''
-def get_temp_matrix():
-  global matrix
-  matrix = np.zeros((row,column),dtype=np.int)            #创建一个row*column的空白方阵
-  matrix_file = open(now_dir + "\\" + fasta_name[0:-6] + ".txt", "r")         #打开之前创建好的_temp.txt文件
-  matrix_row = 0                                                #matrix_row表示矩阵的行，从0行开始
-  for each_line in matrix_file:                                 #遍历_temp.txt文件中的所有行，并将每行存入刚刚建好的矩阵中
-    line_list = each_line.strip(" \n").split(" ")               #首先将每行文件头尾中的字符" \n"去掉，之后再用" "将每个字符分割出来存入列表中
-    matrix[matrix_row:] = line_list                             #将列表中的所有字符赋值给矩阵的第一行
-    matrix_row += 1                                             #开始处理第二行
+
+def white2file(fasta_name, seq_name_list, seq_list):
+    '''
+    函数white2file: 将计算结果写入输出文件中
+    输入：fasta_name: 待处理的fasta文件名称； seq_name_list：包含有所有序列名称的列表文件；seq_list：包含所有被删除过gap的序列的列表
+    输出：写出一个后缀为.fas的结果文件
+    '''     
+    with open(fasta_name[:-2], "a") as write_file:
+        seq_num = len(seq_name_list)
+        for num in range(0,seq_num):
+            write_file.write(seq_name_list[num])
+            write_file.write(seq_list[num] + "\n")
 
 
-'''
-#函数delete_code()，将numpy矩阵中非同源的列删掉
-#function "delete_code()",Delete the non-homologous columns of the numpy matrix
-'''
-def delete_code():
-  need_delete_list = []
-  for i in range(column):
-    num_row_list = list(matrix[:,i])                     #将矩阵的每一列都存储到列表num_row_list中
-    number = num_row_list.count(0)                       #统计每列中的gap个数
-    hold = number/row                              #计算gap占整列数据的比例
-    if hold > float(sys.argv[1][1:]):                                       #如果该比例大于50%
-      need_delete_list.append(i)                         #则将该列的索引号加入到列表need_delete_list中
-  global matrix_new
-  matrix_new = np.delete(matrix,need_delete_list,axis=1)      #在矩阵中将这些索引号所对应的列删掉，并将新的矩阵赋值给一个新的变量matrix_new
-
-
-'''
-#函数write_file()，将最终结果写入输出文件中
-#function "write_file()", Writes the final result to the output file
-'''
-def write_file():
-  name_list = []
-  code_list = []
-  np.savetxt(now_dir + "\\" + fasta_name[0:-2],matrix_new,fmt="%d")
-  os.remove(now_dir + "\\" + fasta_name[0:-6] + ".txt")
-  fas_file = open(now_dir + "\\" + fasta_name[0:-2],"r")
-  tem_file = open(now_dir + "\\" + fasta_name[0:-6],"a")
-  for each_line in fas_file:
-    code_line = each_line
-    intab = "12340"
-    outtab = "ATCG?"
-    trantab = str.maketrans(intab,outtab)         #建立字符映射表
-    new_line = code_line.translate(trantab)            #经过映射的字符串赋值给变量new_line
-    for each in new_line:                         #每行中的字符后面的空格删掉
-        if each != " ":
-            tem_file.write(each)                  #将字符写入文件tem_file中
-  tem_file.close()
-
-  fasta_file = open(now_dir + "\\" + fasta_name, "r")         #打开fasta_name文件
-  for each_fasta_line in fasta_file:                          #读取每一行
-    if each_fasta_line[0] == ">":                             #如果该行第一个字符为">"
-      name_list.append(each_fasta_line)                       #将该行填入列表name_list中
-  fasta_file.close()                      
-
-  tem_file = open(now_dir + "\\" + fasta_name[0:-6],"r")      #打开temp文件
-  for each_tem_line in tem_file:                              #读取该文件中的每一行
-    if each_tem_line[0] != " ":                               #如果该行的第一个字符不为" "
-      code_list.append(each_tem_line)                         #将该行加入到列表code_list中
-      
-  fas_file = open(now_dir + "\\" + fasta_name[0:-2],"w")      #建立最终的fas文件
-  for num in range(0,len(name_list)):                         #得到之前建立的两个列表的长度，遍历这一数字当做列表的索引
-    fas_file.write(name_list[num])                            #将带有">"的一行字符串写入fas_file
-    fas_file.write(code_list[num])                            #将序列写入fas_file
-  fas_file.close()
-  tem_file.close()
-  os.remove(now_dir + "\\" + fasta_name[0:-6])                #将刚刚建立的tem_file删除
-  
-
-      
+def main_get_homo(file_name):
+    '''
+    函数main_get_homo: 控制前面函数运行的函数
+    输入：待处理的文件名称
+    输出：写出的.fas结果文件
+    '''  
+    for fasta_name in file_name:
+        if80to1(fasta_name)
+        seq_name_list = get_seq_name_list(fasta_name)
+        seq_list = calculate(fasta_name)
+        if len(seq_list) != 0:
+            white2file(fasta_name, seq_name_list, seq_list)
+            os.remove(fasta_name[:-3])
+        else:
+            os.remove(fasta_name[:-3])
 
 
 '''
-#主程序
-#main program
+首先定义需要的进程数th
 '''
-  
-
-get_file_list()             #得到当前目录中所有的文件名并存入相关列表中
-
-for fasta_name in file_name:            
-  get_row_column()            #调用函数get_row_column()
-
-  get_matrix()                #调用函数get_matrix()
-  get_temp_matrix()           #调用函数get_temp_matrix()
-  delete_code()               #调用函数delete_code()
-  write_file()                #调用函数write_file()
+th = 4
 
 
+
+def get_th_list(file_name):
+    '''
+    函数 get_th_list: 将所有文件平均的分给各个进程
+    输入 file_name: 所有文件的名称列表
+    输出 th_list： 一个列表，列表中的各个元素为各个进程所应该处理的文件
+    '''
+    th_list = []
+    for each_num in range(th):
+        th_list.append([])
+    print("本程序共使用 " + str(len(th_list)) + " 个进程")
+    n = 0
+    for each_file in file_name:       
+        th_list[n].append(each_file)
+        if n == th - 1:
+            n = 0
+        else:
+            n = n + 1
+    return th_list
+
+file_name = get_file_list()
+
+th_list = get_th_list(file_name)
+print(th_list)
+p = Pool(th)
+for i in range(th):
+    p.apply_async(main_get_homo,(th_list[i],))
+
+print("----start----")
+p.close()  # 关闭进程池，关闭后po不再接收新的请求
+p.join()  # 等待po中所有子进程执行完成，再执行下面的代码,可以设置超时时间join(timeout=)
+print("-----end-----") 
 
